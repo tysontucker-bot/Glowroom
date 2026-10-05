@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Glow Room</title>
+<meta name="description" content="Full-screen visual sensory play for the classroom: sparkles, bubbles, drawing, numbers, letters and more.">
+<meta name="theme-color" content="#0b1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Glow Room">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@700&family=Fredoka:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1020; --ink:#f3f5ff; --muted:#a9b3d6; --panel:#161d36; --line:#2c3762; --accent:#7aa2ff; --good:#4cd18a;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="light"]{ --bg:#0b1020; }
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,sans-serif;overflow:hidden;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overscroll-behavior:none;touch-action:none}
+button{font:inherit;color:inherit}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:calc(env(safe-area-inset-top,0px) + 70px) 18px calc(env(safe-area-inset-bottom,0px) + 24px);
+  background:radial-gradient(circle at 50% 25%,#26306a 0%,#0b1020 70%);overflow:auto;touch-action:pan-y}
+.screen h1{font-family:"Fredoka",system-ui,sans-serif;font-weight:600;font-size:clamp(2.2rem,6vw,3.4rem);margin:0;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;width:min(980px,96vw)}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;background:rgba(255,255,255,.08);border:3px solid rgba(255,255,255,.28);border-bottom-width:9px;border-radius:24px;cursor:pointer;
+  font-family:"Fredoka",system-ui,sans-serif;font-size:1.4rem;padding:14px 8px;transition:transform .08s}
+.tile span{font-size:3.8rem;line-height:1}
+.tile:active{transform:translateY(4px);border-bottom-width:5px}
+.tile:focus-visible,.btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.corner{position:fixed;z-index:20;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.lock{right:12px;width:56px;height:56px;border-radius:50%;border:0;background:rgba(255,255,255,.08);cursor:pointer;touch-action:none}
+.lock svg{position:absolute;inset:0}
+.lock .ico{position:relative;font-size:20px;opacity:.6}
+.back{left:12px;border:2px solid rgba(255,255,255,.3);background:rgba(11,16,32,.55);border-radius:999px;padding:10px 18px;font-family:"Fredoka",system-ui,sans-serif;font-size:1.15rem;cursor:pointer;min-height:48px}
+.tool{left:50%;transform:translateX(-50%);border:2px solid rgba(255,255,255,.3);background:rgba(11,16,32,.55);border-radius:999px;padding:8px 16px;font-size:1.5rem;cursor:pointer;min-height:48px}
+.timer{position:fixed;z-index:20;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);right:14px;width:44px;height:44px;pointer-events:none;opacity:.8}
+.veil{position:fixed;inset:0;z-index:40;background:rgba(5,8,18,.72);display:grid;place-items:center;padding:16px;overflow:auto;touch-action:pan-y}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:20px;width:min(620px,96vw);display:flex;flex-direction:column;gap:16px;max-height:92vh;overflow:auto}
+.panel h2{font-family:"Fredoka",system-ui,sans-serif;font-weight:600;margin:0;font-size:1.7rem}
+.panel h3{margin:0;font-size:1.05rem;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{appearance:none;border:2px solid var(--line);background:#1e2748;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;min-height:46px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#0b1020}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:#1e2748;padding:10px 14px;font-weight:700;cursor:pointer;min-height:44px}
+.seg button.on{background:var(--accent);color:#0b1020}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.ck{display:flex;gap:10px;align-items:center;cursor:pointer;padding:6px 4px}
+.ck input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.meta{color:var(--muted);font-size:.95rem;margin:0}
+.done h1{font-size:clamp(2.6rem,8vw,4.2rem)}
+.done .big{font-size:5rem}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="cv" aria-label="Glow Room. Touch the screen to play." role="img"></canvas>
+<div id="ui"></div>
+<script>
+(() => {
+"use strict";
+/* ---------- settings (kept on this device) ---------- */
+const MODES = [
+  ["sparkles", "✨", "Sparkles"], ["bubbles", "🫧", "Bubbles"], ["draw", "🖍️", "Draw"], ["numbers", "🔢", "Numbers"],
+  ["letters", "🔤", "Letters"], ["fireworks", "🎆", "Fireworks"], ["ripples", "🌈", "Ripples"], ["shapes", "🔷", "Shapes"],
+  ["tunnel", "🌀", "Light tunnel"], ["swirl", "🎨", "Swirl paint"]
+];
+const KEY = "glowroom.settings";
+const DEF = { modes: MODES.map(m => m[0]), choose: true, fixed: "sparkles", canSwitch: true, minutes: 0, calm: false, sound: true, talk: true };
+let set = Object.assign({}, DEF);
+try { Object.assign(set, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(set)); } catch {} };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* ---------- canvas ---------- */
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d"), ui = document.getElementById("ui");
+let W = 0, H = 0, dpr = 1;
+function size() { dpr = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); if (mode && mode.resize) mode.resize(); }
+addEventListener("resize", size);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const hue = () => Math.floor(Math.random() * 360);
+const K = () => set.calm ? 0.45 : 1;              // speed
+const G = () => set.calm ? 0.55 : 1;              // amount / glow
+function wash(a) { ctx.fillStyle = `rgba(11,16,32,${a})`; ctx.fillRect(0, 0, W, H); }
+function clearAll() { ctx.fillStyle = "#0b1020"; ctx.fillRect(0, 0, W, H); }
+
+/* particles shared by most modes */
+let parts = [];
+function burst(x, y, n, h, sp = 5, grav = 0.04) { n = Math.round(n * G()); for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, s = (1 + Math.random() * sp) * K(); parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, h: h ?? hue(), r: 2 + Math.random() * 3, g: grav }); } if (parts.length > 1400) parts.splice(0, parts.length - 1400); }
+function drawParts() { for (const q of parts) { q.x += q.vx; q.y += q.vy; q.vy += q.g * K(); q.life -= 0.016 * K(); const a = Math.max(0, q.life); ctx.fillStyle = `hsla(${q.h},100%,${60 + a * 20}%,${a})`; ctx.beginPath(); ctx.arc(q.x, q.y, q.r * (0.5 + a), 0, Math.PI * 2); ctx.fill(); } parts = parts.filter(q => q.life > 0); }
+
+/* sound */
+let actx = null;
+function tone(f1, f2, dur, vol, type) {
+  if (!set.sound) return;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(); o.type = type || "sine"; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur * 0.6); g.gain.setValueAtTime((vol || 0.12) * (set.calm ? 0.6 : 1), t); g.gain.exponentialRampToValueAtTime(0.001, t + dur); o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur + 0.02); } catch {}
+}
+const pop = () => tone(500 + Math.random() * 400, 1300, 0.15, 0.13, "triangle");
+const bell = () => tone(520 + Math.random() * 300, 900, 0.5, 0.08, "sine");
+let lastSay = 0;
+function say(t) { if (!set.talk || !("speechSynthesis" in window)) return; const now = performance.now(); if (now - lastSay < 300) return; lastSay = now; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.rate = 0.9; speechSynthesis.speak(u); } catch {} }
+
+/* ---------- modes ---------- */
+function makeMode(type) {
+  parts = []; clearAll();
+  const m = { type, things: [], next: 0, down: null, move: null, up: null, frame: null };
+  let last = null;
+  if (type === "sparkles") {
+    m.frame = now => { wash(0.25); if (now > m.next) { burst(rnd(80, W - 80), rnd(80, H * 0.65), 50); m.next = now + 650 / K(); } drawParts(); };
+    m.down = (x, y) => { burst(x, y, 45); bell(); last = [x, y]; };
+    m.move = (x, y) => { burst(x, y, 5); };
+  }
+  if (type === "bubbles") {
+    m.frame = now => {
+      wash(0.3);
+      if (now > m.next && m.things.length < 16 * G()) { m.things.push({ x: rnd(40, W - 40), y: H + 60, r: rnd(30, 72), vy: -rnd(0.6, 1.8), h: hue(), wob: rnd(0, 6) }); m.next = now + 420 / K(); }
+      for (const b of m.things) { b.y += b.vy * K(); b.wob += 0.03 * K(); const x = b.x + Math.sin(b.wob) * 10; b.dx = x;
+        const g = ctx.createRadialGradient(x - b.r * 0.3, b.y - b.r * 0.3, 2, x, b.y, b.r); g.addColorStop(0, "rgba(255,255,255,.9)"); g.addColorStop(0.35, `hsla(${b.h},100%,65%,.55)`); g.addColorStop(1, `hsla(${b.h},100%,55%,.15)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = `hsla(${b.h},100%,80%,.9)`; ctx.lineWidth = 2; ctx.stroke(); }
+      m.things = m.things.filter(b => b.y > -100); drawParts();
+    };
+    m.down = (x, y) => { for (let i = m.things.length - 1; i >= 0; i--) { const b = m.things[i]; if (Math.hypot((b.dx ?? b.x) - x, b.y - y) < b.r + 14) { burst(b.dx ?? b.x, b.y, 34, b.h); m.things.splice(i, 1); pop(); return; } } burst(x, y, 10); };
+  }
+  if (type === "draw") {
+    let n = 0;
+    m.frame = () => { };
+    m.down = (x, y) => { last = [x, y]; };
+    m.move = (x, y) => { if (!last) return; n++; const h = (n * 4) % 360; ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 16; ctx.strokeStyle = `hsl(${h} 100% 62%)`; ctx.shadowColor = `hsl(${h} 100% 60%)`; ctx.shadowBlur = 20 * G(); ctx.beginPath(); ctx.moveTo(last[0], last[1]); ctx.lineTo(x, y); ctx.stroke(); ctx.restore(); last = [x, y]; };
+    m.up = () => { last = null; };
+    m.tool = "🧽"; m.toolDo = () => { clearAll(); };
+  }
+  if (type === "numbers" || type === "letters") {
+    const SYM = type === "numbers" ? Array.from({ length: 20 }, (_, i) => String(i + 1)) : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    let seq = 0, lastDrop = null;
+    const add = (x, y, s, big, fromTouch) => { m.things.push({ x, y, vx: rnd(-2, 2), vy: fromTouch ? -rnd(3, 6) : rnd(1, 3), s, h: fromTouch ? (seq * 23) % 360 : hue(), size: big ? rnd(90, 120) : rnd(50, 80), rot: 0, vr: rnd(-0.06, 0.06), fresh: fromTouch ? 1 : 0 }); if (m.things.length > 60) m.things.splice(0, m.things.length - 60); };
+    const drop = (x, y, big) => { const s = SYM[seq % SYM.length]; seq++; add(x, y, s, big, true); burst(x, y, big ? 24 : 8, (seq * 23) % 360); say(s); if (big) pop(); };
+    m.frame = now => {
+      wash(0.28);
+      if (now > m.next && m.things.length < 12 * G()) { add(rnd(60, W - 60), -60, SYM[Math.floor(Math.random() * SYM.length)], false, false); m.next = now + 800 / K(); }
+      for (const b of m.things) {
+        b.x += b.vx * K(); b.y += b.vy * K(); b.vy += 0.12 * K(); b.rot = Math.max(-0.35, Math.min(0.35, b.rot + b.vr)); if (Math.abs(b.rot) >= 0.35) b.vr = -b.vr;
+        const floor = H - b.size * 0.4; if (b.y > floor) { b.y = floor; b.vy *= -0.6; b.vx *= 0.92; b.vr *= 0.8; b.rot *= 0.85; if (Math.abs(b.vy) < 0.8) b.vy = 0; }
+        if (b.x < 30) { b.x = 30; b.vx = Math.abs(b.vx); } if (b.x > W - 30) { b.x = W - 30; b.vx = -Math.abs(b.vx); }
+        if (b.fresh) b.fresh = Math.max(0, b.fresh - 0.02);
+        const sc = 1 + (b.fresh || 0) * 0.35;
+        ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot); ctx.scale(sc, sc); ctx.font = `700 ${b.size}px Andika, "Atkinson Hyperlegible", system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.shadowColor = `hsl(${b.h} 100% 60%)`; ctx.shadowBlur = (25 + (b.fresh || 0) * 30) * G(); ctx.fillStyle = `hsl(${b.h} 100% 65%)`; ctx.fillText(b.s, 0, 0); ctx.restore();
+      }
+      drawParts();
+    };
+    m.down = (x, y) => { for (let i = m.things.length - 1; i >= 0; i--) { const b = m.things[i]; if (Math.hypot(b.x - x, b.y - y) < b.size * 0.6) { burst(b.x, b.y, 36, b.h); say(b.s); m.things.splice(i, 1); pop(); lastDrop = [x, y]; return; } } drop(x, y, true); lastDrop = [x, y]; };
+    m.move = (x, y) => { if (lastDrop && Math.hypot(x - lastDrop[0], y - lastDrop[1]) > 70) { drop(x, y, false); lastDrop = [x, y]; } };
+    m.up = () => { lastDrop = null; };
+  }
+  if (type === "fireworks") {
+    const launch = (x, ty) => { m.things.push({ x, y: H + 10, ty, h: hue(), vy: -rnd(9, 12) }); tone(200, 700, 0.35, 0.05, "sine"); };
+    m.frame = now => {
+      wash(0.18);
+      if (now > m.next) { launch(rnd(80, W - 80), rnd(H * 0.15, H * 0.5)); m.next = now + 1300 / K(); }
+      for (const r of m.things) { r.y += r.vy * K(); ctx.fillStyle = `hsl(${r.h} 100% 75%)`; ctx.beginPath(); ctx.arc(r.x, r.y, 3, 0, Math.PI * 2); ctx.fill(); parts.push({ x: r.x + rnd(-1, 1), y: r.y + 4, vx: rnd(-0.3, 0.3), vy: rnd(0.5, 1.5), life: 0.6, h: r.h, r: 1.6, g: 0 });
+        if (r.y <= r.ty) { r.done = true; burst(r.x, r.y, 90, r.h, 5, 0.05); burst(r.x, r.y, 30, (r.h + 60) % 360, 2.5, 0.05); tone(160, 60, 0.4, 0.1, "sine"); } }
+      m.things = m.things.filter(r => !r.done); drawParts();
+    };
+    m.down = (x, y) => { launch(x, Math.max(60, y)); };
+  }
+  if (type === "ripples") {
+    const ring = (x, y, h) => m.things.push({ x, y, r: 4, h: h ?? hue(), life: 1 });
+    m.frame = now => {
+      wash(0.22);
+      if (now > m.next) { ring(rnd(0, W), rnd(0, H)); m.next = now + 900 / K(); }
+      for (const c of m.things) { c.r += 2.2 * K(); c.life -= 0.008 * K(); ctx.strokeStyle = `hsla(${c.h},100%,65%,${Math.max(0, c.life)})`; ctx.lineWidth = 6 * c.life + 1; ctx.shadowColor = `hsl(${c.h} 100% 60%)`; ctx.shadowBlur = 16 * G(); ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.shadowBlur = 0; m.things = m.things.filter(c => c.life > 0); if (m.things.length > 90) m.things.splice(0, m.things.length - 90);
+    };
+    let n = 0;
+    m.down = (x, y) => { const h = hue(); for (let i = 0; i < 3; i++) setTimeout(() => ring(x, y, (h + i * 40) % 360), i * 140); bell(); last = [x, y]; };
+    m.move = (x, y) => { n++; if (n % 4 === 0) ring(x, y, (n * 7) % 360); };
+  }
+  if (type === "shapes") {
+    const KINDS = ["circle", "star", "tri", "square", "heart"];
+    const add = (x, y) => { const a = Math.random() * Math.PI * 2, s = rnd(1.5, 3.5); m.things.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, r: rnd(28, 55), k: KINDS[Math.floor(Math.random() * KINDS.length)], h: hue(), rot: 0, vr: rnd(-0.03, 0.03) }); if (m.things.length > 26) m.things.shift(); };
+    for (let i = 0; i < 8; i++) add(rnd(80, W - 80), rnd(80, H - 80));
+    const path = (k, r) => {
+      ctx.beginPath();
+      if (k === "circle") ctx.arc(0, 0, r, 0, Math.PI * 2);
+      if (k === "square") ctx.rect(-r * 0.8, -r * 0.8, r * 1.6, r * 1.6);
+      if (k === "tri") { ctx.moveTo(0, -r); ctx.lineTo(r * 0.9, r * 0.7); ctx.lineTo(-r * 0.9, r * 0.7); ctx.closePath(); }
+      if (k === "star") { for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } ctx.closePath(); }
+      if (k === "heart") { ctx.moveTo(0, r * 0.8); ctx.bezierCurveTo(-r * 1.2, 0, -r * 0.6, -r, 0, -r * 0.35); ctx.bezierCurveTo(r * 0.6, -r, r * 1.2, 0, 0, r * 0.8); }
+    };
+    m.frame = () => {
+      wash(0.2);
+      for (const s of m.things) {
+        s.x += s.vx * K(); s.y += s.vy * K(); s.rot += s.vr * K();
+        if (s.x < s.r) { s.x = s.r; s.vx = Math.abs(s.vx); s.h = hue(); } if (s.x > W - s.r) { s.x = W - s.r; s.vx = -Math.abs(s.vx); s.h = hue(); }
+        if (s.y < s.r) { s.y = s.r; s.vy = Math.abs(s.vy); s.h = hue(); } if (s.y > H - s.r) { s.y = H - s.r; s.vy = -Math.abs(s.vy); s.h = hue(); }
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.rot); path(s.k, s.r); ctx.fillStyle = `hsla(${s.h},100%,60%,.35)`; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = `hsl(${s.h} 100% 68%)`; ctx.shadowColor = `hsl(${s.h} 100% 60%)`; ctx.shadowBlur = 22 * G(); ctx.stroke(); ctx.restore();
+      }
+      drawParts();
+    };
+    m.down = (x, y) => { for (const s of m.things) if (Math.hypot(s.x - x, s.y - y) < s.r + 10) { s.h = hue(); s.vx *= -1.2; s.vy *= -1.2; burst(s.x, s.y, 26, s.h); pop(); return; } add(x, y); burst(x, y, 16); bell(); };
+  }
+  if (type === "tunnel") {
+    let cx = W / 2, cy = H / 2, tx = cx, ty = cy, t = 0, spin = 1;
+    m.frame = () => {
+      wash(0.35);
+      t += 0.012 * K(); cx += (tx - cx) * 0.05; cy += (ty - cy) * 0.05;
+      const N = 18, maxR = Math.hypot(W, H) * 0.7;
+      for (let i = N; i >= 0; i--) {
+        const f = ((i / N) + t) % 1, r = Math.pow(f, 1.8) * maxR, h = (i * 20 + t * 200) % 360;
+        const x = W / 2 + (cx - W / 2) * (1 - f), y = H / 2 + (cy - H / 2) * (1 - f);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(t * spin + i * 0.2);
+        ctx.strokeStyle = `hsla(${h},100%,62%,${0.25 + f * 0.6})`; ctx.lineWidth = 2 + f * 10; ctx.shadowColor = `hsl(${h} 100% 60%)`; ctx.shadowBlur = 18 * G();
+        ctx.beginPath(); for (let k = 0; k <= 6; k++) { const a = k * Math.PI / 3; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.stroke(); ctx.restore();
+      }
+      drawParts();
+    };
+    m.down = (x, y) => { tx = x; ty = y; spin = -spin; burst(x, y, 30); bell(); };
+    m.move = (x, y) => { tx = x; ty = y; };
+    m.resize = () => { tx = cx = W / 2; ty = cy = H / 2; };
+  }
+  if (type === "swirl") {
+    const P = [];
+    for (let i = 0; i < 380 * G(); i++) P.push({ x: rnd(0, W), y: rnd(0, H), h: hue() });
+    let fx = null, fy = null, t = 0;
+    m.frame = () => {
+      wash(0.06);
+      t += 0.004 * K();
+      for (const p of P) {
+        const a = Math.sin(p.x * 0.004 + t) * 2 + Math.cos(p.y * 0.004 - t) * 2;
+        let vx = Math.cos(a) * 1.6, vy = Math.sin(a) * 1.6;
+        if (fx !== null) { const dx = fx - p.x, dy = fy - p.y, d = Math.hypot(dx, dy) + 20; vx += (-dy / d) * 160 / d * 3 + dx / d * 0.6; vy += (dx / d) * 160 / d * 3 + dy / d * 0.6; }
+        const ox = p.x, oy = p.y; p.x += vx * K(); p.y += vy * K(); p.h = (p.h + 0.4) % 360;
+        if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) { p.x = rnd(0, W); p.y = rnd(0, H); continue; }
+        ctx.strokeStyle = `hsla(${p.h},100%,62%,.8)`; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(p.x, p.y); ctx.stroke();
+      }
+    };
+    m.down = (x, y) => { fx = x; fy = y; bell(); };
+    m.move = (x, y) => { fx = x; fy = y; };
+    m.up = () => { fx = fy = null; };
+  }
+  return m;
+}
+
+/* ---------- app state ---------- */
+let mode = null, raf = 0, view = "menu", sessionEnd = 0, pointerDown = false;
+function loop(now) {
+  if (mode && mode.frame) mode.frame(now);
+  if (sessionEnd && view === "play") {
+    const left = Math.max(0, sessionEnd - Date.now()), total = set.minutes * 60000;
+    const ring = document.getElementById("tring"); if (ring) ring.setAttribute("stroke-dashoffset", String(119.4 * (1 - left / total)));
+    if (left <= 0) { endSession(); return; }
+  }
+  raf = requestAnimationFrame(loop);
+}
+function startLoop() { cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+function enabled() { return MODES.filter(m => set.modes.includes(m[0])); }
+
+const LOCK = `<button class="corner lock" id="lock" aria-label="Teacher: press and hold to unlock"><svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/><circle id="lringp" cx="28" cy="28" r="24" fill="none" stroke="#7aa2ff" stroke-width="4" stroke-dasharray="150.8" stroke-dashoffset="150.8" stroke-linecap="round" transform="rotate(-90 28 28)"/></svg><span class="ico" aria-hidden="true">🔒</span></button>`;
+
+function showMenu() {
+  view = "menu"; mode = null; cancelAnimationFrame(raf); clearAll();
+  const list = enabled();
+  if (!set.choose && list.some(m => m[0] === set.fixed)) { play(set.fixed); return; }
+  ui.innerHTML = `${LOCK}<div class="screen"><h1>Pick one! ✨</h1><div class="grid">${list.map(([k, e, t]) => `<button class="tile" data-m="${k}"><span aria-hidden="true">${e}</span>${esc(t)}</button>`).join("")}</div></div>`;
+  wireLock();
+  ui.querySelector(".grid").addEventListener("click", e => { const b = e.target.closest("[data-m]"); if (b) { if (!sessionEnd && set.minutes) sessionEnd = Date.now() + set.minutes * 60000; play(b.dataset.m); } });
+}
+function play(k) {
+  view = "play";
+  if (!sessionEnd && set.minutes) sessionEnd = Date.now() + set.minutes * 60000;
+  mode = makeMode(k);
+  const canBack = set.choose && set.canSwitch && enabled().length > 1;
+  ui.innerHTML = `${LOCK}${canBack ? `<button class="corner back" id="back">⬅ Choices</button>` : ""}${mode.tool ? `<button class="corner tool" id="tool" aria-label="Clear">${mode.tool}</button>` : ""}
+    ${set.minutes ? `<svg class="timer" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4"/><circle id="tring" cx="22" cy="22" r="19" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="119.4" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 22 22)"/></svg>` : ""}`;
+  wireLock();
+  const back = document.getElementById("back"); if (back) back.onclick = () => showMenu();
+  const tool = document.getElementById("tool"); if (tool) tool.onclick = () => mode.toolDo && mode.toolDo();
+  startLoop();
+}
+function endSession() {
+  cancelAnimationFrame(raf); view = "done"; mode = null; sessionEnd = 0;
+  try { speechSynthesis.cancel(); } catch {}
+  ui.innerHTML = `${LOCK}<div class="screen done"><div class="big" aria-hidden="true">🌟</div><h1>All done!</h1><p style="font-size:1.4rem;margin:0;color:var(--muted)">Time for the next thing.</p></div>`;
+  wireLock(); tone(660, 880, 0.6, 0.1, "sine");
+}
+
+/* canvas input */
+const pt = e => [e.clientX, e.clientY];
+cv.addEventListener("pointerdown", e => { if (view !== "play" || !mode) return; e.preventDefault(); pointerDown = true; try { cv.setPointerCapture(e.pointerId); } catch {} const [x, y] = pt(e); mode.down && mode.down(x, y); });
+cv.addEventListener("pointermove", e => { if (view !== "play" || !mode || !pointerDown) return; const [x, y] = pt(e); mode.move && mode.move(x, y); });
+const upH = () => { pointerDown = false; if (mode && mode.up) mode.up(); };
+cv.addEventListener("pointerup", upH); cv.addEventListener("pointercancel", upH);
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("gesturestart", e => e.preventDefault());
+
+/* hold the lock for 3 seconds to open the teacher panel */
+function wireLock() {
+  const b = document.getElementById("lock"); if (!b) return;
+  const ring = document.getElementById("lringp"); let t0 = 0, r = 0;
+  const reset = () => { cancelAnimationFrame(r); t0 = 0; ring.style.strokeDashoffset = 150.8; };
+  const tick = () => { const k = Math.min(1, (performance.now() - t0) / 3000); ring.style.strokeDashoffset = 150.8 * (1 - k); if (k >= 1) { reset(); teacher(); return; } r = requestAnimationFrame(tick); };
+  b.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); t0 = performance.now(); r = requestAnimationFrame(tick); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, reset));
+}
+
+/* ---------- teacher panel ---------- */
+function teacher() {
+  const wasPlaying = view === "play";
+  const d = JSON.parse(JSON.stringify(set));
+  const v = document.createElement("div"); v.className = "veil";
+  const draw = () => {
+    v.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-label="Teacher settings">
+      <h2>Teacher settings</h2>
+      <div><h3>Modes students can use</h3><div class="checks">${MODES.map(([k, e, t]) => `<label class="ck"><input type="checkbox" data-mode="${k}" ${d.modes.includes(k) ? "checked" : ""}> <span aria-hidden="true">${e}</span> ${esc(t)}</label>`).join("")}</div></div>
+      <div><h3>How a mode is picked</h3><div class="seg" role="group"><button data-k="choose" data-v="1" class="${d.choose ? "on" : ""}">Student picks from pictures</button><button data-k="choose" data-v="0" class="${!d.choose ? "on" : ""}">I set it</button></div>
+        ${d.choose ? `<label class="ck"><input type="checkbox" data-b="canSwitch" ${d.canSwitch ? "checked" : ""}> Students can go back and pick another</label>` : `<div class="row" style="margin-top:8px"><label for="fx">Mode</label><select id="fx" data-sel="fixed" style="min-height:44px;border-radius:10px;background:#1e2748;color:inherit;border:2px solid var(--line);padding:6px 10px">${MODES.filter(m => d.modes.includes(m[0])).map(([k, e, t]) => `<option value="${k}" ${d.fixed === k ? "selected" : ""}>${e} ${esc(t)}</option>`).join("")}</select></div>`}</div>
+      <div><h3>Session length</h3><div class="seg" role="group">${[[0, "No limit"], [2, "2 min"], [5, "5 min"], [10, "10 min"], [15, "15 min"]].map(([n, t]) => `<button data-k="minutes" data-v="${n}" class="${d.minutes === n ? "on" : ""}">${t}</button>`).join("")}</div>
+        <p class="meta" style="margin-top:6px">When time is up, an "All done!" screen stays until you unlock it.</p></div>
+      <div><h3>Feel</h3>
+        <label class="ck"><input type="checkbox" data-b="calm" ${d.calm ? "checked" : ""}> Calm mode: slower, softer, fewer sparkles</label>
+        <label class="ck"><input type="checkbox" data-b="sound" ${d.sound ? "checked" : ""}> Gentle sounds</label>
+        <label class="ck"><input type="checkbox" data-b="talk" ${d.talk ? "checked" : ""}> Say numbers and letters out loud</label></div>
+      <p class="meta">Nothing in Glow Room flashes or strobes the whole screen. Settings are saved on this device. To leave, press and hold the lock for 3 seconds.</p>
+      <div class="row"><button class="btn primary" data-act="start">Save and start</button>${wasPlaying ? `<button class="btn" data-act="resume">Resume</button>` : ""}<button class="btn" data-act="cancel">Cancel</button></div>
+    </div>`;
+  };
+  draw();
+  document.body.appendChild(v);
+  v.addEventListener("change", e => {
+    const t = e.target;
+    if (t.dataset.mode) { const s2 = new Set(d.modes); t.checked ? s2.add(t.dataset.mode) : s2.delete(t.dataset.mode); d.modes = MODES.map(m => m[0]).filter(k => s2.has(k)); if (!d.modes.includes(d.fixed) && d.modes.length) d.fixed = d.modes[0]; setTimeout(draw, 0); }
+    if (t.dataset.b) d[t.dataset.b] = t.checked;
+    if (t.dataset.sel) d[t.dataset.sel] = t.value;
+  });
+  v.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.k === "choose") { d.choose = b.dataset.v === "1"; draw(); }
+    if (b.dataset.k === "minutes") { d.minutes = +b.dataset.v; draw(); }
+    const act = b.dataset.act;
+    if (act === "cancel" || act === "resume") { v.remove(); if (view === "done") showMenu(); }
+    if (act === "start") {
+      if (!d.modes.length) { b.textContent = "Check at least one mode"; return; }
+      set = d; save(); v.remove(); sessionEnd = 0; parts = []; showMenu();
+    }
+  });
+}
+
+size();
+showMenu();
+/* works offline once it has been opened one time */
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+})();
+</script>
+</body>
+</html>
